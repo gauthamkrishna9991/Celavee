@@ -28,7 +28,7 @@
  */
 
 /*
- * Case 1.1: Try to rewrite square value as an atomic event
+ * Case 1.2: Try to rewrite square value as an atomic event
  */
 
 #include <stdio.h>
