@@ -29,7 +29,7 @@
 
 /*
  * Case 2: In this following example, the fn `reporter` must run only after
- * `assigner` is run, but when you run it, but again runs unexpectedly here.
+ * `assigner` is run, fixed to run properly.
  */
 
 #include <stdio.h>
@@ -46,26 +46,35 @@ int value = 100;
 bool notified = false;
 
 void* reporter(void* unused) {
-  /* pthread_mutex_lock (&m); */
-  /* while (!notified) { */
-  /*   pthread_cond_wait (&cond_var, &m); */
-  /* } */
+  // make lock the mutex
+  pthread_mutex_lock (&m);
+  // if it's not notified, run the following
+  while (!notified) {
+    // wait until cond_var is given the continue signal
+    pthread_cond_wait (&cond_var, &m);
+  }
 
   printf("The value is %d\n", value);
 
-  /* pthread_mutex_unlock (&m); */
+  // unlock the thread mutex
+  pthread_mutex_unlock (&m);
 
   return NULL;
 }
 
 
 void *assigner(void *unused) {
+  // Assign value as 20
   value = 20;
 
-  /* pthread_mutex_lock (&m); */
-  /* notified = true; */
-  /* pthread_cond_signal (&cond_var); */
-  /* pthread_mutex_unlock (&m); */
+  // lock the mutex
+  pthread_mutex_lock (&m);
+  // assign notified as true
+  notified = true;
+  // send the signal to continue the thread
+  pthread_cond_signal (&cond_var);
+  // unlock the mutex
+  pthread_mutex_unlock (&m);
 
   return NULL;
 }
@@ -80,7 +89,7 @@ int main ()
   pthread_create (&asgn, NULL, assigner, NULL);
 
   // the unused pointer
-  void *unused;
+  void *unused = NULL;
 
   // wait till the 2 therads have been finished executing
   pthread_join (rep, unused);
