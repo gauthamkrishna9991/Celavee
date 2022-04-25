@@ -28,7 +28,7 @@
  */
 
 /*
- * Case 1: Race Conditions
+ * Case 1.1: Try to rewrite square value as an atomic event
  */
 
 #include <stdio.h>
@@ -45,8 +45,12 @@ void* square(void* x) {
   // cast void pointer `x` into int
   int xi = (int)(intptr_t)x;
 
-  // update accumulator
-  accum += xi * xi;
+  // assign temp to accum
+  int temp = accum;
+  // increement temporary value by accum
+  temp += xi * xi;
+  // assignment here is an atomic operation
+  accum = temp;
 
   // nothing to return, prevent warning
   return NULL;
