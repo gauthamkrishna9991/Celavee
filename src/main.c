@@ -28,50 +28,63 @@
  */
 
 /*
- * Step 2: Employ mutexes to eliminate race conditions among threads
+ * Case 2: In this following example, the fn `reporter` must run only after
+ * `assigner` is run, but when you run it, but again runs unexpectedly here.
  */
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <pthread.h>
 
 
-// single global variable
-// shared, accessible, modified by all threads
-int accum = 0;
-pthread_mutex_t accum_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond_var = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 
-void* square(void* x) {
-  // cast void pointer `x` into int
-  int xi = (int)(intptr_t)x;
+int value = 100;
+bool notified = false;
 
-  // assign temp to the squarable value
-  int temp = xi * xi;
+void* reporter(void* unused) {
+  /* pthread_mutex_lock (&m); */
+  /* while (!notified) { */
+  /*   pthread_cond_wait (&cond_var, &m); */
+  /* } */
 
-  // lock the thread to make atomic oepration
-  pthread_mutex_lock (&accum_mutex);
-  // accumulation here is an atomic operation
-  accum += temp;
-  // unlock the thread as atomic operation is done
-  pthread_mutex_unlock (&accum_mutex);
+  printf("The value is %d\n", value);
 
-  // nothing to return, prevent warning
+  /* pthread_mutex_unlock (&m); */
+
+  return NULL;
+}
+
+
+void *assigner(void *unused) {
+  value = 20;
+
+  /* pthread_mutex_lock (&m); */
+  /* notified = true; */
+  /* pthread_cond_signal (&cond_var); */
+  /* pthread_mutex_unlock (&m); */
+
   return NULL;
 }
 
 int main ()
 {
-  pthread_t threads[20];
-  for (int i = 0; i < 20; i++) {
-    pthread_create (&threads[i], NULL, square, (void*)(intptr_t)i+1);
-  }
+  // create 2 therad objects
+  pthread_t rep, asgn;
 
-  for (int i = 0; i < 20; i++) {
-    void *res;
-    pthread_join(threads[i], &res);
-  }
+  // create the new threads from them, and assign functions
+  pthread_create (&rep, NULL, reporter, NULL);
+  pthread_create (&asgn, NULL, assigner, NULL);
 
-  printf("ACCUM = %d\n", accum);
+  // the unused pointer
+  void *unused;
+
+  // wait till the 2 therads have been finished executing
+  pthread_join (rep, unused);
+  pthread_join (asgn, unused);
+
   return 0;
 }
