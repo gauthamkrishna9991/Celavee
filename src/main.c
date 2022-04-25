@@ -27,6 +27,9 @@
  * authorization.
  */
 
+/*
+ * Step 1: Create a thread, and wait for it to return back
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
