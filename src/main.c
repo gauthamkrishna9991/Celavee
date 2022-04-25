@@ -28,7 +28,7 @@
  */
 
 /*
- * Case 1.2: Try to rewrite square value as an atomic event
+ * Step 2: Employ mutexes to eliminate race conditions among threads
  */
 
 #include <stdio.h>
@@ -40,17 +40,21 @@
 // single global variable
 // shared, accessible, modified by all threads
 int accum = 0;
+pthread_mutex_t accum_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void* square(void* x) {
   // cast void pointer `x` into int
   int xi = (int)(intptr_t)x;
 
-  // assign temp to accum
-  int temp = accum;
-  // increement temporary value by accum
-  temp += xi * xi;
-  // assignment here is an atomic operation
-  accum = temp;
+  // assign temp to the squarable value
+  int temp = xi * xi;
+
+  // lock the thread to make atomic oepration
+  pthread_mutex_lock (&accum_mutex);
+  // accumulation here is an atomic operation
+  accum += temp;
+  // unlock the thread as atomic operation is done
+  pthread_mutex_unlock (&accum_mutex);
 
   // nothing to return, prevent warning
   return NULL;
