@@ -35,24 +35,32 @@
 
 
 void* func(void* x) {
-  // Cast the
+  // cast from void pointer to integer
   int xi = (int)(intptr_t)x;
 
+  // print passed in value
   printf("INSIDE THREAD: %d", xi);
 
+  // return the value after converting back to void pointer
   return (void*)(intptr_t)(xi + 123);
 }
 
 int main ()
 {
+  // create a POSIX thread to run
   pthread_t thread;
   pthread_create (&thread, NULL, func, (void*)100);
 
+  // set up the pointer to which the value is returned to
   void* ret_from_thread;
+  // declare the integer whhere the returning void pointer is casted to
   int ri;
+  // wait for the thread to join and get the return value
   pthread_join(thread, &ret_from_thread);
+  // cast it from void pointer to int
   ri = (int)(intptr_t)ret_from_thread;
 
+  // print the newly created value
   printf("OUTSIDE THE THREAD: %d", ri);
 
   return 0;
