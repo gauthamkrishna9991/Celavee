@@ -28,7 +28,7 @@
  */
 
 /*
- * Step 1: Create a thread, and wait for it to return back
+ * Case 1: Race Conditions
  */
 
 #include <stdio.h>
@@ -37,34 +37,33 @@
 #include <pthread.h>
 
 
-void* func(void* x) {
-  // cast from void pointer to integer
+// single global variable
+// shared, accessible, modified by all threads
+int accum = 0;
+
+void* square(void* x) {
+  // cast void pointer `x` into int
   int xi = (int)(intptr_t)x;
 
-  // print passed in value
-  printf("INSIDE THREAD: %d", xi);
+  // update accumulator
+  accum += xi * xi;
 
-  // return the value after converting back to void pointer
-  return (void*)(intptr_t)(xi + 123);
+  // nothing to return, prevent warning
+  return NULL;
 }
 
 int main ()
 {
-  // create a POSIX thread to run
-  pthread_t thread;
-  pthread_create (&thread, NULL, func, (void*)100);
+  pthread_t threads[20];
+  for (int i = 0; i < 20; i++) {
+    pthread_create (&threads[i], NULL, square, (void*)(intptr_t)i+1);
+  }
 
-  // set up the pointer to which the value is returned to
-  void* ret_from_thread;
-  // declare the integer whhere the returning void pointer is casted to
-  int ri;
-  // wait for the thread to join and get the return value
-  pthread_join(thread, &ret_from_thread);
-  // cast it from void pointer to int
-  ri = (int)(intptr_t)ret_from_thread;
+  for (int i = 0; i < 20; i++) {
+    void *res;
+    pthread_join(threads[i], &res);
+  }
 
-  // print the newly created value
-  printf("OUTSIDE THE THREAD: %d", ri);
-
+  printf("ACCUM = %d\n", accum);
   return 0;
 }
