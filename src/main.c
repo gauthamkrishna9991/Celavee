@@ -39,61 +39,49 @@
 #include <pthread.h>
 
 
-pthread_cond_t cond_var = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+int c = 0;
+bool done = false;
 
-int value = 100;
-bool notified = false;
 
-void* reporter(void* unused) {
-  // make lock the mutex
-  pthread_mutex_lock (&m);
-  // if it's not notified, run the following
-  while (!notified) {
-    // wait until cond_var is given the continue signal
-    pthread_cond_wait (&cond_var, &m);
+void*
+producer(void* unused)
+{
+  for(int i = 0; i < 500; i++)
+  {
+    /* produce something */
+    /* and add it to the list */
+    c++;
   }
-
-  printf("The value is %d\n", value);
-
-  // unlock the thread mutex
-  pthread_mutex_unlock (&m);
-
+  done = true;
   return NULL;
 }
 
-
-void *assigner(void *unused) {
-  // Assign value as 20
-  value = 20;
-
-  // lock the mutex
-  pthread_mutex_lock (&m);
-  // assign notified as true
-  notified = true;
-  // send the signal to continue the thread
-  pthread_cond_signal (&cond_var);
-  // unlock the mutex
-  pthread_mutex_unlock (&m);
-
+void*
+consumer(void* unused)
+{
+  while (!done)
+  {
+    while (c > 0)
+    {
+      /* remove something from list */
+      c--;
+    }
+  }
   return NULL;
 }
 
 int main ()
 {
-  // create 2 therad objects
-  pthread_t rep, asgn;
+  pthread_t prod, con;
 
-  // create the new threads from them, and assign functions
-  pthread_create (&rep, NULL, reporter, NULL);
-  pthread_create (&asgn, NULL, assigner, NULL);
+  pthread_create (&prod, NULL, producer, NULL);
+  pthread_create (&con, NULL, consumer, NULL);
 
-  // the unused pointer
-  void *unused = NULL;
+  void* unused = NULL;
+  pthread_join (prod, &unused);
+  pthread_join (con, &unused);
 
-  // wait till the 2 therads have been finished executing
-  pthread_join (rep, unused);
-  pthread_join (asgn, unused);
+  printf ("NET: %d\n", c);
 
   return 0;
 }
