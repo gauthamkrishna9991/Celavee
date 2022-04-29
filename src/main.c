@@ -28,8 +28,7 @@
  */
 
 /*
- * Case 2: In this following example, the fn `reporter` must run only after
- * `assigner` is run, fixed to run properly.
+ * PROBLEM: Solve the producer-consumer problem here.
  */
 
 #include <stdio.h>
